@@ -8,6 +8,7 @@ import { Entity } from "prismarine-entity";
 import { findVillagerTrade } from "./findVillagerTrade";
 import { BotMother } from "../test_utils/BotMock";
 import { VillagerEntityMother } from "../test_utils/VillagerEntityMother";
+import { withPropertyAccessControlled } from "../test_utils/withPropertyAccessControlled";
 const registry = _registry("1.19");
 const Block = require("prismarine-block")(registry) as typeof _Block;
 
@@ -53,26 +54,14 @@ test("resolves when finding an item the first time it opens the villager", async
 
 test("places a block on the specified coordinates if the villages has no trades", async () => {
   const bot = BotMother.create();
-  let entitiesPropertyTimesAccessed = 0;
-  const proxiedBot = new Proxy(bot, {
-    get: function (obj, prop) {
-      if (prop === "entities") {
-        entitiesPropertyTimesAccessed += 1;
-        switch (entitiesPropertyTimesAccessed) {
-          case 1:
-            return {
-              "1": VillagerEntityMother.builder().withoutProfession().build(),
-            };
-          case 2:
-            return {
-              "1": VillagerEntityMother.builder().withProfession().build(),
-            };
-        }
-      }
-      // @ts-ignore
-      return obj[prop];
-    },
-  });
+  const proxiedBot = withPropertyAccessControlled(bot, "entities")
+    .add({
+      "1": VillagerEntityMother.builder().withoutProfession().build(),
+    })
+    .add({
+      "1": VillagerEntityMother.builder().withProfession().build(),
+    })
+    .finish();
   const villager = {
     trades: [
       { outputItem: { enchants: [{ name: "efficiency" }] } } as VillagerTrade,
