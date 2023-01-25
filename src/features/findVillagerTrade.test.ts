@@ -7,6 +7,7 @@ import _registry from "prismarine-registry";
 import { Entity } from "prismarine-entity";
 import { findVillagerTrade } from "./findVillagerTrade";
 import { BotMother } from "../test_utils/BotMock";
+import { VillagerEntityMother } from "../test_utils/VillagerEntityMother";
 const registry = _registry("1.19");
 const Block = require("prismarine-block")(registry) as typeof _Block;
 
@@ -32,10 +33,9 @@ test("fails if there's no villager around", async () => {
 });
 
 test("resolves when finding an item the first time it opens the villager", async () => {
-  const villagerEntity = {
-    name: "villager",
-    metadata: [0, { villagerType: 2, villagerProfession: 1, level: 1 }],
-  } as Entity;
+  const villagerEntity = VillagerEntityMother.builder()
+    .withoutProfession()
+    .build();
   const bot = BotMother.create({ entities: { "some-id": villagerEntity } });
   const villager = {
     trades: [
@@ -52,20 +52,7 @@ test("resolves when finding an item the first time it opens the villager", async
 });
 
 test("places a block on the specified coordinates if the villages has no trades", async () => {
-  const villagerEntityWithoutProfession = {
-    name: "villager",
-    metadata: [0, { villagerType: 2, villagerProfession: 0, level: 1 }],
-  } as Entity;
-  const villagerEntityWithProfession = {
-    name: "villager",
-    metadata: [0, { villagerType: 2, villagerProfession: 1, level: 1 }],
-  } as Entity;
-  const entities: Record<string | symbol, Entity> = {
-    "1": villagerEntityWithoutProfession,
-  };
-  const bot = BotMother.create({
-    entities,
-  });
+  const bot = BotMother.create();
   let entitiesPropertyTimesAccessed = 0;
   const proxiedBot = new Proxy(bot, {
     get: function (obj, prop) {
@@ -74,11 +61,11 @@ test("places a block on the specified coordinates if the villages has no trades"
         switch (entitiesPropertyTimesAccessed) {
           case 1:
             return {
-              "1": villagerEntityWithoutProfession,
+              "1": VillagerEntityMother.builder().withoutProfession().build(),
             };
           case 2:
             return {
-              "1": villagerEntityWithProfession,
+              "1": VillagerEntityMother.builder().withProfession().build(),
             };
         }
       }
@@ -101,13 +88,9 @@ test("places a block on the specified coordinates if the villages has no trades"
     return null;
   });
   bot.openVillagerMock.mockResolvedValueOnce(villager);
-  bot.openVillagerMock.mockResolvedValueOnce(villagerEntityWithProfession);
 
   const result = await findVillagerTrade(proxiedBot);
 
-  // expect(bot.openVillager).toHaveBeenCalledWith(
-  //   villagerEntityWithoutProfession
-  // );
   expect(bot.openVillager).toHaveBeenCalledTimes(1);
   expect(result).not.toBeNull();
 });
