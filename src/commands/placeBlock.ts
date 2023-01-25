@@ -4,7 +4,7 @@ import { z } from "zod";
 import v from "vec3";
 import { placeBlock } from "../features/placeBlock";
 
-export const makePlaceBlock: (bot: Bot) => Command =
+export const makePlaceBlockCommand: (bot: Bot) => Command =
   (bot) =>
   async (...args) => {
     const stringCoercedToNumberSchema = z.preprocess(

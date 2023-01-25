@@ -2,8 +2,10 @@ import mineflayer from "mineflayer";
 import { mineflayer as mineflayerViewer } from "prismarine-viewer";
 import inventoryViewer from "mineflayer-web-inventory";
 import { pathfinder, Movements, goals } from "mineflayer-pathfinder";
-import { makeCome } from "./commands";
-import { makePlaceBlock } from "./commands/placeBlock";
+import { makeComeCommand } from "./commands";
+import { makePlaceBlockCommand } from "./commands/placeBlock";
+import { findVillagerTrade } from "./features/findVillagerTrade";
+import { makeFindVillagerTradeCommand } from "./commands/findVillagerTrade";
 
 const MINECRAFT_SERVER_PORT = 25565;
 const bot = mineflayer.createBot({
@@ -19,12 +21,12 @@ bot.loadPlugin(
     chatPattern: /^» \w+? » /,
   })
 );
-
-bot.dashboard.commands["come"] = makeCome(bot);
-bot.dashboard.commands["placeBlock"] = makePlaceBlock(bot);
+bot.dashboard.commands["come"] = makeComeCommand(bot);
+bot.dashboard.commands["placeBlock"] = makePlaceBlockCommand(bot);
+bot.dashboard.commands["findVillagerTrade"] = makeFindVillagerTradeCommand(bot);
 
 bot.once("spawn", () => {
-  mineflayerViewer(bot, { port: 3007, firstPerson: false }); // port is the minecraft server port, if first person is false, you get a bird's-eye view
+  mineflayerViewer(bot, { port: 3007, firstPerson: false });
 });
 
 bot.on("kicked", console.log);
